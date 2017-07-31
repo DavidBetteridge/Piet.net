@@ -1,72 +1,10 @@
-﻿#load "Library1.fs"
-open Piet.net
+﻿module Parser
+
 open System.Drawing
-
-type hue = byte  //0..5
-type lightness = byte  //0..2
-
-type colour = 
-    | White
-    | Black
-    | Colour of hue * lightness
-
-type program  = colour[,]
-
-type direction =
-    | Right
-    | Down
-    | Left
-    | Up
-
-type dp = direction
-
-type cc =
-    | Left
-    | Right
-
-type command =
-    | NOP
-    | Push
-    | Pop
-    | Add
-    | Substract
-    | Multiple
-    | Divide
-    | Mod
-    | Not
-    | Greater
-    | Pointer
-    | Switch
-    | Duplicate
-    | Roll
-    | InNumber
-    | InChar
-    | OutNumber
-    | OutChar
+open Types
 
 let modulo n m = ((n % m) + m) % m
 
-let cellToText (colour:colour) : string = 
-    match colour with 
-    | colour.Colour(0uy,0uy) -> "Light Red"
-    | colour.Colour(0uy,1uy) -> "Red"
-    | colour.Colour(0uy,2uy) -> "Dark Red"
-    | colour.Colour(1uy,0uy) -> "Light Yellow"
-    | colour.Colour(1uy,1uy) -> "Yellow"
-    | colour.Colour(1uy,2uy) -> "Dark Yellow"
-    | colour.Colour(2uy,0uy) -> "Light Green"
-    | colour.Colour(2uy,1uy) -> "Green"
-    | colour.Colour(2uy,2uy) -> "Dark Green"
-    | colour.Colour(3uy,0uy) -> "Light Cyan"
-    | colour.Colour(3uy,1uy) -> "Cyan"
-    | colour.Colour(3uy,2uy) -> "Dark Cyan"
-    | colour.Colour(4uy,0uy) -> "Light Blue"
-    | colour.Colour(4uy,1uy) -> "Blue"
-    | colour.Colour(4uy,2uy) -> "Dark Blue"
-    | colour.Colour(5uy,0uy) -> "Light Magenta"
-    | colour.Colour(5uy,1uy) -> "Magenta"
-    | colour.Colour(5uy,2uy) -> "Dark Magenta"
-    | _ -> failwith("Unknown Colour")
 
 let colourToCell (color:Color) : colour = 
     match int(color.R), int(color.G), int(color.B) with
@@ -206,10 +144,10 @@ let moveDPClockwise = function
 
 let getNextCommand program width height x y (dp:dp) (cc:cc) = 
     
-    let rec worker (dp:dp) (cc:cc) attempt = 
+    let rec worker (dp:dp) (cc':cc) attempt = 
 
         let x', y' = furthestInDirection program x y width height dp
-        let dir = directionFromDPandCC dp cc
+        let dir = directionFromDPandCC dp cc'
         let x'', y'' = findEdgeOfBlock width height program dir x' y'   
         let next = moveIntoNextBlock width height program dp x'' y''
 
@@ -219,11 +157,11 @@ let getNextCommand program width height x y (dp:dp) (cc:cc) =
                     | _ -> true //We are ok.
 
         if (isOk) then
-            Some(next.Value, dp, cc)
+            Some(next.Value, dp, cc')
         else
             match attempt with
-            | 0 | 2 | 4 | 6-> worker dp (toggle cc) (attempt + 1)
-            | 1 | 3 | 5 | 7-> worker (moveDPClockwise dp) (toggle cc) (attempt + 1)
+            | 0 | 2 | 4 | 6-> worker dp (toggle cc') (attempt + 1)
+            | 1 | 3 | 5 | 7-> worker (moveDPClockwise dp) cc' (attempt + 1)
             | _ -> None
 
     worker dp cc 0
@@ -237,14 +175,11 @@ let decodeCommand (fromColour:colour) (toColour:colour) : command =
                   | Colour(h,l) -> (h,l)
                   | _ -> failwith("ToColour Must be a colour")
 
-    //let hueChange = modulo (int(h2) - int(h1)) 6
-
     let hueChange = if h2 >= h1 then 
                         int(h2) - int(h1)
                     else
                         (6 - int(h1)) + int(h2)
 
-    printfn "%A %A %A" hueChange h1 h2
 
     let lightnessChange = modulo (int(l2) - int(l1)) 3
 
@@ -254,7 +189,7 @@ let decodeCommand (fromColour:colour) (toColour:colour) : command =
     | 0,2 -> Pop
     | 1,0 -> Add
     | 1,1 -> Substract
-    | 1,2 -> Multiple
+    | 1,2 -> Multiply
     | 2,0 -> Divide
     | 2,1 -> Mod
     | 2,2 -> Not
@@ -268,64 +203,3 @@ let decodeCommand (fromColour:colour) (toColour:colour) : command =
     | 5,1 -> OutNumber
     | 5,2 -> OutChar
     | _,_ -> failwith("Unexpected hue/lightness change")
-    
-    
-let doCommand previousNumber cmd stack (cc:cc) = 
-    match cmd with
-    | command.Push -> //Add the previous number onto the stack
-                      previousNumber :: stack, cc
-
-    | command.OutChar -> //Pop the value from the top of the stack and print it.
-                      match stack with
-                      | [] -> failwith("Stack is empty")
-                      | x::xs -> printf "%A" (x |> char)
-                                 xs, cc
-    | command.Duplicate ->  match stack with
-                            | [] -> failwith("Stack is empty")
-                            | x::xs -> (x::stack), cc 
-    
-    | command.Mod -> match stack with
-                     | x::y::xs -> let a = modulo y x
-                                   (a::xs), cc 
-                     | _ -> failwith("Stack is empty")
-                     
-    | command.Switch ->  match stack with
-                         | [] -> failwith("Stack is empty")
-                         | x::xs when x % 2 = 0 -> xs, cc 
-                         | x::xs -> xs, (toggle cc)
-                         
-    | command.InChar -> stack, cc         
-
-    | _ -> failwith(sprintf "Unknown command %A" cmd)
-
-let rec runLoop program width height x y dp cc stack =
-    let next = getNextCommand program width height x y dp cc
-    match next with
-    | None -> 0
-    | Some((x',y'), dp', cc') -> 
-                                let previousNumber = countPixelsInBlock program x y width height
-                                let cmd = decodeCommand program.[x,y] program.[x',y'] 
-                                let t = cellToText(program.[x,y])
-                                printfn "%A %A" t cmd
-                                let s = System.Console.ReadLine()
-                                let stack', cc'' = doCommand previousNumber cmd stack cc'
-                                runLoop program width height x' y' dp' cc'' stack'
-
-let image = new Bitmap("C:\Code\Piet.net\Piet_hello_big.png")
-let width, height, program = loadImage image 5
-
-runLoop program width height 0 0 dp.Right cc.Left []
-
-
-
-
-//countPixelsInBlock program 0 0 width height 
-
-//let dp' = dp.Right
-//let cc' = cc.Left
-//let next = getNextCommand program width height 0 0 dp' cc'
-//let (x,y),dp'',cc'' = next.Value
-//let cmd = decodeCommand program.[0,0] program.[x,y] 
-//printfn "%A" cmd
-
-//()

@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Piet.net", "Piet.net.fsproj", "{84E14552-F0B0-43ED-881F-D5B076BA2383}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Runner", "Runner\Runner.fsproj", "{94B41D21-B970-4936-A3C8-6B0490505B0C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{84E14552-F0B0-43ED-881F-D5B076BA2383}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84E14552-F0B0-43ED-881F-D5B076BA2383}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84E14552-F0B0-43ED-881F-D5B076BA2383}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94B41D21-B970-4936-A3C8-6B0490505B0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94B41D21-B970-4936-A3C8-6B0490505B0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94B41D21-B970-4936-A3C8-6B0490505B0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94B41D21-B970-4936-A3C8-6B0490505B0C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
