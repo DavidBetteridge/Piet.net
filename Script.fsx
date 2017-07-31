@@ -96,7 +96,7 @@ let getMatchingNeighbours x y width height (program:program) =
             if x > 0 && colourToMatch = program.[x - 1,y] then yield ( x- 1, y)
             if (x + 1) < width && colourToMatch = program.[x + 1,y] then yield (x + 1, y)
             if y > 0 && colourToMatch = program.[x,y - 1] then yield (x, y - 1)
-            if (y + 1) < width && colourToMatch = program.[x,y + 1] then yield (x, y + 1)
+            if (y + 1) < height && colourToMatch = program.[x,y + 1] then yield (x, y + 1)
         }
 
 
@@ -139,9 +139,9 @@ let rec findEdgeOfBlock width height (program:program) (direction:direction) x y
 
     match direction with
     | direction.Left ->  if (x = 0 || program.[x - 1,y] <> colourToMatch) then x,y else next (x - 1) y  
-    | direction.Right ->  if (x = width - 1 || program.[x + 1,y] <> colourToMatch) then  x,y else next (x + 1) y  
+    | direction.Right ->  if (x = (width - 1) || program.[x + 1,y] <> colourToMatch) then  x,y else next (x + 1) y  
     | direction.Up ->  if (y = 0 || program.[x,y - 1] <> colourToMatch) then x,y else next x (y - 1)  
-    | direction.Down ->  if (y = height - 1 || program.[x,y + 1] <> colourToMatch) then x,y else next x (y + 1)  
+    | direction.Down ->  if (y = (height - 1) || program.[x,y + 1] <> colourToMatch) then x,y else next x (y + 1)  
 
 let moveIntoNextBlock width height (program:program) (dp:dp) startX startY   = 
     let rec next x y = 
@@ -151,9 +151,9 @@ let moveIntoNextBlock width height (program:program) (dp:dp) startX startY   =
         else
             match dp with
             | dp.Left ->  if (x = 0) then None else next (x - 1) y  
-            | dp.Right ->  if (x = width - 1) then None else next (x + 1) y  
+            | dp.Right ->  if (x = (width - 1)) then None else next (x + 1) y  
             | dp.Up ->  if (y = 0) then None else next x (y - 1)  
-            | dp.Down ->  if (y = height - 1) then None else next x (y + 1)  
+            | dp.Down ->  if (y = (height - 1)) then None else next x (y + 1)  
 
     //Keep walking until we hit an edge, or a block of a different colour
     next startX startY
@@ -238,17 +238,62 @@ let decodeCommand (fromColour:colour) (toColour:colour) : command =
     | 5,1 -> OutNumber
     | 5,2 -> OutChar
     | _,_ -> failwith("Unexpected hue/lightness change")
-
     
+    
+let doCommand previousNumber cmd stack (cc:cc) = 
+    match cmd with
+    | command.Push -> //Add the previous number onto the stack
+                      previousNumber :: stack, cc
+
+    | command.OutChar -> //Pop the value from the top of the stack and print it.
+                      match stack with
+                      | [] -> failwith("Stack is empty")
+                      | x::xs -> printf "%A" (x |> char)
+                                 xs, cc
+    | command.Duplicate ->  match stack with
+                            | [] -> failwith("Stack is empty")
+                            | x::xs -> (x::stack), cc 
+    
+    | command.Mod -> match stack with
+                     | x::y::xs -> let a = modulo y x
+                                   (a::xs), cc 
+                     | _ -> failwith("Stack is empty")
+                     
+    | command.Switch ->  match stack with
+                         | [] -> failwith("Stack is empty")
+                         | x::xs when x % 2 = 0 -> (stack), cc 
+                         | x::xs -> (xs), (toggle cc)
+                         
+    | command.InChar -> stack, cc         
+
+    | _ -> failwith(sprintf "Unknown command %A" cmd)
+
+let rec runLoop program width height x y dp cc stack =
+    let next = getNextCommand program width height x y dp cc
+    match next with
+    | None -> 0
+    | Some((x',y'), dp', cc') -> 
+                                let previousNumber = countPixelsInBlock program x y width height
+                                let cmd = decodeCommand program.[x,y] program.[x',y'] 
+                                //printfn "%A" cmd
+                                let stack', cc'' = doCommand previousNumber cmd stack cc'
+                                runLoop program width height x' y' dp' cc'' stack'
 
 let image = new Bitmap("C:\Code\Piet.net\Piet_hello_big.png")
 let width, height, program = loadImage image 5
-countPixelsInBlock program 0 0 width height 
 
-let dp' = dp.Right
-let cc' = cc.Left
-let next = getNextCommand program width height 0 0 dp' cc'
-let (x,y),dp'',cc'' = next.Value
-let cmd = decodeCommand program.[0,0] program.[x,y] 
-printfn "%A" cmd
-()
+runLoop program width height 0 0 dp.Right cc.Left []
+
+
+
+
+//countPixelsInBlock program 0 0 width height 
+
+//let dp' = dp.Right
+//let cc' = cc.Left
+//let next = getNextCommand program width height 0 0 dp' cc'
+//let (x,y),dp'',cc'' = next.Value
+//let cmd = decodeCommand program.[0,0] program.[x,y] 
+//printfn "%A" cmd
+
+//()
