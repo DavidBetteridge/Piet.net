@@ -142,6 +142,12 @@ let moveDPClockwise = function
                     | dp.Right -> dp.Down
                     | dp.Down -> dp.Left
 
+let moveDPAntiClockwise = function
+                        | dp.Left -> dp.Down
+                        | dp.Down -> dp.Right
+                        | dp.Right -> dp.Up
+                        | dp.Up -> dp.Left
+
 let getNextCommand program width height x y (dp:dp) (cc:cc) = 
     
     let rec worker (dp:dp) (cc':cc) attempt = 
@@ -151,18 +157,25 @@ let getNextCommand program width height x y (dp:dp) (cc:cc) =
         let x'', y'' = findEdgeOfBlock width height program dir x' y'   
         let next = moveIntoNextBlock width height program dp x'' y''
 
-        let isOk =  match next with
-                    | None -> false //We have hit an edge
-                    | Some(x',y') when program.[x', y'] = colour.Black -> false //We have hit a restriction
-                    | _ -> true //We are ok.
+        let isOk,inWhite =  match next with
+                            | None -> false, false //We have hit an edge
+                            | Some(x',y') when program.[x', y'] = colour.Black -> false, false //We have hit a restriction
+                            | Some(x',y') when program.[x', y'] = colour.White -> false, true  //We have entered a white block
+                            | _ -> true, false //We are ok.
 
-        if (isOk) then
-            Some(next.Value, dp, cc')
+        if inWhite then
+            // Keep going until we hit something
+            let x,y = next.Value
+            let next' = moveIntoNextBlock width height program dp x y
+            Some(next'.Value, dp, cc', false)
         else
-            match attempt with
-            | 0 | 2 | 4 | 6-> worker dp (toggle cc') (attempt + 1)
-            | 1 | 3 | 5 | 7-> worker (moveDPClockwise dp) cc' (attempt + 1)
-            | _ -> None
+            if (isOk) then
+                Some(next.Value, dp, cc', true)
+            else
+                match attempt with
+                | 0 | 2 | 4 | 6-> worker dp (toggle cc') (attempt + 1)
+                | 1 | 3 | 5 | 7-> worker (moveDPClockwise dp) cc' (attempt + 1)
+                | _ -> None
 
     worker dp cc 0
 

@@ -2,7 +2,6 @@
 open Types
 open Parser
 
-
 let rotateStack (stack:List<int>) (depth:int) =
     let first = stack.Head
     let popped = stack.GetSlice (Some(1), Some(depth - 1))
@@ -17,7 +16,6 @@ let reverseRotateStack (stack:List<int>) (depth:int) =
     let withTop = first :: popped
     rest |> List.append withTop
 
-
 let rec rollStack (stack:List<int>) (depth:int) (timesToRoll:int) =
     match depth < 0, timesToRoll with
     | true, _ -> stack   //A negative depth is an error and the command is ignored.
@@ -25,9 +23,17 @@ let rec rollStack (stack:List<int>) (depth:int) (timesToRoll:int) =
     | _, _ when timesToRoll > 0 -> rollStack (rotateStack stack depth) depth (timesToRoll - 1)
     | _, _ -> rollStack (reverseRotateStack stack depth) depth (timesToRoll + 1)  //A negative number of rolls rolls in the opposite direction
 
+let rec rotateDP (dp:dp) times = 
+    if times = 0 then 
+        dp
+    else if times > 0 then
+        rotateDP (moveDPClockwise dp) (times - 1)
+    else
+        rotateDP (moveDPAntiClockwise dp) (times + 1)
     
 let doCommand previousNumber cmd stack (cc:cc) (dp:dp) = 
     match cmd with
+    | command.NOP ->  stack, cc, dp
     | command.Push -> //Add the previous number onto the stack
                       previousNumber :: stack, cc, dp
 
@@ -53,7 +59,7 @@ let doCommand previousNumber cmd stack (cc:cc) (dp:dp) =
     | command.Mod -> match stack with
                      | x::y::xs -> let a = modulo y x
                                    (a::xs), cc, dp 
-                     | _ -> failwith("Stack is empty")
+                     | _ -> stack, cc, dp //failwith("Stack is empty")
                      
     | command.Add -> match stack with
                      | n::m::xs -> let s = n + m
@@ -82,37 +88,54 @@ let doCommand previousNumber cmd stack (cc:cc) (dp:dp) =
                          | _ -> failwith("Stack is empty")
 
     | command.Switch ->  match stack with
-                         | [] -> failwith("Stack is empty")
+                         | [] ->stack, cc, dp// failwith("Stack is empty")
                          | x::xs when x % 2 = 0 -> xs, cc, dp 
                          | x::xs -> xs, (toggle cc), dp
 
-    //| command.Pointer ->  match stack with
-    //                      | [] -> failwith("Stack is empty")
-    //                      | x::xs when x > 0 -> xs, cc, dp 
-    //                      | x::xs -> xs, cc, dp
+    | command.Pointer ->  match stack with
+                          | [] -> failwith("Stack is empty")
+                          | x::xs -> xs, cc, (rotateDP dp x)
 
     | command.Roll -> match stack with
                       | n::d::xs -> let xs' = rollStack xs d n
                                     xs', cc, dp 
                       | _ -> failwith("Stack is empty")
 
-    | _ -> failwith(sprintf "Unknown command %A" cmd)
+    | command.InNumber -> let value = System.Console.ReadKey().KeyChar
+                          let number = (value |> int) - ('0' |> int)
+                          (number :: stack), cc, dp
 
+    | command.InChar -> let value = System.Console.ReadKey().KeyChar
+                        let number = (value |> int)
+                        (number :: stack), cc, dp
+
+    | command.OutNumber -> //Pop the value from the top of the stack and print it.
+                           match stack with
+                           | [] -> failwith("Stack is empty")
+                           | x::xs -> printf "%A" ((x  + ('0' |> int)) |> char)
+                                      xs, cc, dp
+                                      
 let rec runLoop program width height x y dp cc stack =
     let next = getNextCommand program width height x y dp cc
     match next with
-    | None -> 0
-    | Some((x',y'), dp', cc') -> 
-                                let previousNumber = countPixelsInBlock program x y width height
-                                let cmd = decodeCommand program.[x,y] program.[x',y'] 
-                                let stack', cc'', dp'' = doCommand previousNumber cmd stack cc' dp'
-                                runLoop program width height x' y' dp'' cc'' stack'
+    | None -> 0  //end of application
+    | Some((x',y'), dp', cc', true) -> 
+                                        //Moved from colour block to colour block
+                                        let previousNumber = countPixelsInBlock program x y width height
+                                        let cmd = decodeCommand program.[x,y] program.[x',y'] 
+                                        let stack', cc'', dp'' = doCommand previousNumber cmd stack cc' dp'
+                                        runLoop program width height x' y' dp'' cc'' stack'
+
+    | Some((x',y'), dp', cc', false) -> //Moved from colour block to colour block via a white block
+                                        runLoop program width height x' y' dp' cc' stack
+
 
 [<EntryPoint>]
 let main argv = 
-    let image = new Bitmap("C:\Code\Piet.net\Piet_hello2.png")
+    //let image = new Bitmap("C:\Code\Piet.net\Piet_hello2.png")
+    let image = new Bitmap("C:\Code\Piet.net\Piet_alpha.png")
     let width, height, program = loadImage image 1
-
+    //
     //let image = new Bitmap("C:\Code\Piet.net\Piet_hello_Big.png")
     //let width, height, program = loadImage image 5
 
