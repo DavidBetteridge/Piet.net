@@ -10,10 +10,20 @@ let rotateStack (stack:List<int>) (depth:int) =
     let withTop = first :: rest
     withTop|> List.append popped 
 
+let reverseRotateStack (stack:List<int>) (depth:int) =
+    let popped = stack.GetSlice (Some(0), Some(depth - 2))
+    let first = stack.Item (depth - 1)
+    let rest = stack.GetSlice (Some(depth), None)
+    let withTop = first :: popped
+    rest |> List.append withTop
+
+
 let rec rollStack (stack:List<int>) (depth:int) (timesToRoll:int) =
-    match timesToRoll with
-    | 0 -> stack
-    | _ -> rollStack (rotateStack stack depth) depth (timesToRoll - 1)
+    match depth < 0, timesToRoll with
+    | true, _ -> stack   //A negative depth is an error and the command is ignored.
+    | _, 0 -> stack
+    | _, _ when timesToRoll > 0 -> rollStack (rotateStack stack depth) depth (timesToRoll - 1)
+    | _, _ -> rollStack (reverseRotateStack stack depth) depth (timesToRoll + 1)  //A negative number of rolls rolls in the opposite direction
 
     
 let doCommand previousNumber cmd stack (cc:cc) (dp:dp) = 
@@ -81,10 +91,10 @@ let doCommand previousNumber cmd stack (cc:cc) (dp:dp) =
     //                      | x::xs when x > 0 -> xs, cc, dp 
     //                      | x::xs -> xs, cc, dp
 
-    //| command.Roll -> match stack with
-    //                  | n::d::xs -> let xs' = rollStack xs d n
-    //                                xs', cc, dp 
-    //                  | _ -> failwith("Stack is empty")
+    | command.Roll -> match stack with
+                      | n::d::xs -> let xs' = rollStack xs d n
+                                    xs', cc, dp 
+                      | _ -> failwith("Stack is empty")
 
     | _ -> failwith(sprintf "Unknown command %A" cmd)
 
@@ -100,11 +110,11 @@ let rec runLoop program width height x y dp cc stack =
 
 [<EntryPoint>]
 let main argv = 
-    //let image = new Bitmap("C:\Code\Piet.net\Piet_hello2.png")
-    //let width, height, program = loadImage image 1//5
+    let image = new Bitmap("C:\Code\Piet.net\Piet_hello2.png")
+    let width, height, program = loadImage image 1
 
-    let image = new Bitmap("C:\Code\Piet.net\Piet_hello_Big.png")
-    let width, height, program = loadImage image 5
+    //let image = new Bitmap("C:\Code\Piet.net\Piet_hello_Big.png")
+    //let width, height, program = loadImage image 5
 
     let a = runLoop program width height 0 0 dp.Right cc.Left []
     let b = System.Console.ReadLine()
