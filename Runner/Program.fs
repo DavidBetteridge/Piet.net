@@ -30,21 +30,53 @@ let rec rotateDP (dp:dp) times =
         rotateDP (moveDPClockwise dp) (times - 1)
     else
         rotateDP (moveDPAntiClockwise dp) (times + 1)
+
+
+// Pushes the value of the colour block just exited on to the stack. Note that values of colour blocks are not automatically pushed on to the stack - this push operation must be explicitly carried out.
+let push previousNumber stack cc dp = 
+    previousNumber :: stack, cc, dp    
+
+// Pops the top value off the stack and discards it.
+let pop stack cc dp = 
+    match stack with
+    | [] -> failwith("Stack is empty")
+    | x::xs -> xs, cc, dp 
+
+//Pops the top two values off the stack, adds them, and pushes the result back on the stack
+let add stack cc dp = 
+    match stack with
+    | n::m::xs -> let s = n + m
+                  s :: xs, cc, dp 
+    | _ -> failwith("Stack is empty")
+
+//Pops the top two values off the stack, calculates the second top value minus the top value, and pushes the result back on the stack.
+let subtract stack cc dp = 
+    match stack with
+    | n::m::xs -> let s = m - n
+                  s :: xs, cc, dp 
+    | _ -> failwith("Stack is empty")
+
+// Pops the top two values off the stack, multiplies them, and pushes the result back on the stack.
+let multiply stack cc dp = 
+    match stack with
+    | n::m::xs -> let s = m * n
+                  s :: xs, cc, dp 
+    | _ -> failwith("Stack is empty")
     
 let doCommand previousNumber cmd stack (cc:cc) (dp:dp) = 
     match cmd with
-    | command.NOP ->  stack, cc, dp
-    | command.Push -> //Add the previous number onto the stack
-                      previousNumber :: stack, cc, dp
+    | command.NOP -> stack, cc, dp
+    | command.Push -> push previousNumber stack cc dp
+    | command.Pop -> pop stack cc dp
+    | command.Add -> add stack cc dp
+    | command.Subtract -> subtract stack cc dp
+    | command.Multiply -> multiply stack cc dp
 
     | command.Not -> match stack with
                      | [] -> failwith("Stack is empty")
                      | x::xs when x = 0 -> 1::xs, cc, dp 
                      | x::xs -> 0::xs, cc, dp
 
-    | command.Pop -> match stack with
-                     | [] -> failwith("Stack is empty")
-                     | x::xs -> xs, cc, dp 
 
     | command.OutChar -> //Pop the value from the top of the stack and print it.
                       match stack with
@@ -61,20 +93,9 @@ let doCommand previousNumber cmd stack (cc:cc) (dp:dp) =
                                    (a::xs), cc, dp 
                      | _ -> stack, cc, dp //failwith("Stack is empty")
                      
-    | command.Add -> match stack with
-                     | n::m::xs -> let s = n + m
-                                   s :: xs, cc, dp 
-                     | _ -> failwith("Stack is empty")
 
-    | command.Substract -> match stack with
-                           | n::m::xs -> let s = m - n
-                                         s :: xs, cc, dp 
-                           | _ -> failwith("Stack is empty")
 
-    | command.Multiply -> match stack with
-                           | n::m::xs -> let s = m * n
-                                         s :: xs, cc, dp 
-                           | _ -> failwith("Stack is empty")
+
 
     | command.Divide -> match stack with
                         | n::m::xs when m = 0 -> 0 :: xs, cc, dp   //Ignore division by zero
@@ -133,11 +154,11 @@ let rec runLoop program width height x y dp cc stack =
 [<EntryPoint>]
 let main argv = 
     //let image = new Bitmap("C:\Code\Piet.net\Piet_hello2.png")
-    let image = new Bitmap("C:\Code\Piet.net\Piet_alpha.png")
-    let width, height, program = loadImage image 1
+    //let image = new Bitmap("C:\Code\Piet.net\piet_pi.png")
+    //let width, height, program = loadImage image 1
     //
-    //let image = new Bitmap("C:\Code\Piet.net\Piet_hello_Big.png")
-    //let width, height, program = loadImage image 5
+    let image = new Bitmap("C:\Code\Piet.net\Piet_hello_Big.png")
+    let width, height, program = loadImage image 5
 
     let a = runLoop program width height 0 0 dp.Right cc.Left []
     let b = System.Console.ReadLine()

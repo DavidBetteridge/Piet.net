@@ -6,41 +6,41 @@ open Types
 let modulo n m = ((n % m) + m) % m
 
 
-let colourToCell (color:Color) : colour = 
+let colourToCell (color:Color) : codel = 
     match int(color.R), int(color.G), int(color.B) with
-    | 0xFF, 0xC0, 0xC0 -> colour.Colour(0uy,0uy)  //Light Red
-    | 0xFF, 0x00, 0x00 -> colour.Colour(0uy,1uy)  //Red
-    | 0xC0, 0x00, 0x00 -> colour.Colour(0uy,2uy)  //Dark Red
+    | 0xFF, 0xC0, 0xC0 -> codel.Colour(hue.Red,lightness.Light)  
+    | 0xFF, 0x00, 0x00 -> codel.Colour(hue.Red,lightness.Normal) 
+    | 0xC0, 0x00, 0x00 -> codel.Colour(hue.Red,lightness.Dark)   
 
-    | 0xFF, 0xFF, 0xC0 -> colour.Colour(1uy,0uy)  //Light Yellow
-    | 0xFF, 0xFF, 0x00 -> colour.Colour(1uy,1uy)  //Yellow
-    | 0xC0, 0xC0, 0x00 -> colour.Colour(1uy,2uy)  //Dark Yellow
+    | 0xFF, 0xFF, 0xC0 -> codel.Colour(hue.Yellow,lightness.Light) 
+    | 0xFF, 0xFF, 0x00 -> codel.Colour(hue.Yellow,lightness.Normal)
+    | 0xC0, 0xC0, 0x00 -> codel.Colour(hue.Yellow,lightness.Dark)  
 
-    | 0xC0, 0xFF, 0xC0 -> colour.Colour(2uy,0uy)  //Light Green
-    | 0x00, 0xFF, 0x00 -> colour.Colour(2uy,1uy)  //Green
-    | 0x00, 0xC0, 0x00 -> colour.Colour(2uy,2uy)  //Dark Green
+    | 0xC0, 0xFF, 0xC0 -> codel.Colour(hue.Green,lightness.Light) 
+    | 0x00, 0xFF, 0x00 -> codel.Colour(hue.Green,lightness.Normal)
+    | 0x00, 0xC0, 0x00 -> codel.Colour(hue.Green,lightness.Dark)  
 
-    | 0xC0, 0xFF, 0xFF -> colour.Colour(3uy,0uy)  //Light Cyan
-    | 0x00, 0xFF, 0xFF -> colour.Colour(3uy,1uy)  //Cyan
-    | 0x00, 0xC0, 0xC0 -> colour.Colour(3uy,2uy)  //Dark Cyan
+    | 0xC0, 0xFF, 0xFF -> codel.Colour(hue.Cyan,lightness.Light) 
+    | 0x00, 0xFF, 0xFF -> codel.Colour(hue.Cyan,lightness.Normal)
+    | 0x00, 0xC0, 0xC0 -> codel.Colour(hue.Cyan,lightness.Dark)  
 
-    | 0xC0, 0xC0, 0xFF -> colour.Colour(4uy,0uy)  //Light Blue
-    | 0x00, 0x00, 0xFF -> colour.Colour(4uy,1uy)  //Blue
-    | 0x00, 0x00, 0xC0 -> colour.Colour(4uy,2uy)  //Dark Blue
+    | 0xC0, 0xC0, 0xFF -> codel.Colour(hue.Blue,lightness.Light)  
+    | 0x00, 0x00, 0xFF -> codel.Colour(hue.Blue,lightness.Normal) 
+    | 0x00, 0x00, 0xC0 -> codel.Colour(hue.Blue,lightness.Dark)   
 
-    | 0xFF, 0xC0, 0xFF -> colour.Colour(5uy,0uy)  //Light Magenta
-    | 0xFF, 0x00, 0xFF -> colour.Colour(5uy,1uy)  //Magenta
-    | 0xC0, 0x00, 0xC0 -> colour.Colour(5uy,2uy)  //Dark Magenta
+    | 0xFF, 0xC0, 0xFF -> codel.Colour(hue.Magenta,lightness.Light)  
+    | 0xFF, 0x00, 0xFF -> codel.Colour(hue.Magenta,lightness.Normal) 
+    | 0xC0, 0x00, 0xC0 -> codel.Colour(hue.Magenta,lightness.Dark)   
 
-    | 0x00, 0x00, 0x00 -> colour.Black
+    | 0x00, 0x00, 0x00 -> codel.Black
 
-    | _ -> colour.White
+    | _ -> codel.White
 
 let loadImage (image:Bitmap) (codelSize:int) : (int * int * program) = 
 
     let width = image.Width / codelSize
     let height = image.Height / codelSize
-    let a = Array2D.init width height (fun _ _ -> colour.White)
+    let a = Array2D.init width height (fun _ _ -> codel.White)
 
     for x in 0..width-1 do
         for y in 0..height-1 do
@@ -159,14 +159,14 @@ let getNextCommand program width height x y (dp:dp) (cc:cc) =
 
         let isOk,inWhite =  match next with
                             | None -> false, false //We have hit an edge
-                            | Some(x',y') when program.[x', y'] = colour.Black -> false, false //We have hit a restriction
-                            | Some(x',y') when program.[x', y'] = colour.White -> false, true  //We have entered a white block
+                            | Some(x',y') when program.[x', y'] = codel.Black -> false, false //We have hit a restriction
+                            | Some(x',y') when program.[x', y'] = codel.White -> false, true  //We have entered a white block
                             | _ -> true, false //We are ok.
 
         if inWhite then
             // Keep going until we hit something
             let x,y = next.Value
-            let next' = moveIntoNextBlock width height program dp x y
+            let next' = moveIntoNextBlock width height program dp x y  //TODO: Check we haven't hit a restriction
             Some(next'.Value, dp, cc', false)
         else
             if (isOk) then
@@ -179,7 +179,7 @@ let getNextCommand program width height x y (dp:dp) (cc:cc) =
 
     worker dp cc 0
 
-let decodeCommand (fromColour:colour) (toColour:colour) : command =
+let decodeCommand (fromColour:codel) (toColour:codel) : command =
     let (h1,l1) = match fromColour with
                   | Colour(h,l) -> (h,l)
                   | _ -> failwith("FromColour Must be a colour")
@@ -188,11 +188,7 @@ let decodeCommand (fromColour:colour) (toColour:colour) : command =
                   | Colour(h,l) -> (h,l)
                   | _ -> failwith("ToColour Must be a colour")
 
-    let hueChange = if h2 >= h1 then 
-                        int(h2) - int(h1)
-                    else
-                        (6 - int(h1)) + int(h2)
-
+    let hueChange = modulo (int(h2) - int(h1)) 6
 
     let lightnessChange = modulo (int(l2) - int(l1)) 3
 
@@ -201,7 +197,7 @@ let decodeCommand (fromColour:colour) (toColour:colour) : command =
     | 0,1 -> Push
     | 0,2 -> Pop
     | 1,0 -> Add
-    | 1,1 -> Substract
+    | 1,1 -> Subtract
     | 1,2 -> Multiply
     | 2,0 -> Divide
     | 2,1 -> Mod

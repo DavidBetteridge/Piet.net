@@ -1,14 +1,24 @@
 ﻿module Types
 
-type hue = byte  //0..5
-type lightness = byte  //0..2
+type hue = 
+    | Red = 0
+    | Yellow = 1
+    | Green = 2
+    | Cyan = 3
+    | Blue = 4
+    | Magenta = 5
 
-type colour = 
+type lightness = 
+    | Light = 0
+    | Normal = 1
+    | Dark = 2
+
+type codel = 
     | White
     | Black
     | Colour of hue * lightness
 
-type program  = colour[,]
+type program  = codel[,]
 
 type direction =
     | Right
@@ -27,7 +37,7 @@ type command =
     | Push
     | Pop
     | Add
-    | Substract
+    | Subtract
     | Multiply
     | Divide
     | Mod

@@ -2,26 +2,26 @@
 
 open Types
 
-let cellToText (colour:colour) : string = 
+let cellToText (colour:codel) : string = 
     match colour with 
-    | colour.Colour(0uy,0uy) -> "Light Red"
-    | colour.Colour(0uy,1uy) -> "Red"
-    | colour.Colour(0uy,2uy) -> "Dark Red"
-    | colour.Colour(1uy,0uy) -> "Light Yellow"
-    | colour.Colour(1uy,1uy) -> "Yellow"
-    | colour.Colour(1uy,2uy) -> "Dark Yellow"
-    | colour.Colour(2uy,0uy) -> "Light Green"
-    | colour.Colour(2uy,1uy) -> "Green"
-    | colour.Colour(2uy,2uy) -> "Dark Green"
-    | colour.Colour(3uy,0uy) -> "Light Cyan"
-    | colour.Colour(3uy,1uy) -> "Cyan"
-    | colour.Colour(3uy,2uy) -> "Dark Cyan"
-    | colour.Colour(4uy,0uy) -> "Light Blue"
-    | colour.Colour(4uy,1uy) -> "Blue"
-    | colour.Colour(4uy,2uy) -> "Dark Blue"
-    | colour.Colour(5uy,0uy) -> "Light Magenta"
-    | colour.Colour(5uy,1uy) -> "Magenta"
-    | colour.Colour(5uy,2uy) -> "Dark Magenta"
+    | codel.Colour(hue.Red,lightness.Light)  -> "Light Red"
+    | codel.Colour(hue.Red,lightness.Normal) -> "Red"
+    | codel.Colour(hue.Red,lightness.Dark)   -> "Dark Red"
+    | codel.Colour(hue.Yellow,lightness.Light)  -> "Light Yellow"
+    | codel.Colour(hue.Yellow,lightness.Normal) -> "Yellow"
+    | codel.Colour(hue.Yellow,lightness.Dark)   -> "Dark Yellow"
+    | codel.Colour(hue.Green,lightness.Light)  -> "Light Green"
+    | codel.Colour(hue.Green,lightness.Normal) -> "Green"
+    | codel.Colour(hue.Green,lightness.Dark)   -> "Dark Green"
+    | codel.Colour(hue.Cyan,lightness.Light)  -> "Light Cyan"
+    | codel.Colour(hue.Cyan,lightness.Normal) -> "Cyan"
+    | codel.Colour(hue.Cyan,lightness.Dark)   -> "Dark Cyan"
+    | codel.Colour(hue.Blue,lightness.Light)  -> "Light Blue"
+    | codel.Colour(hue.Blue,lightness.Normal) -> "Blue"
+    | codel.Colour(hue.Blue,lightness.Dark)   -> "Dark Blue"
+    | codel.Colour(hue.Magenta,lightness.Light)  -> "Light Magenta"
+    | codel.Colour(hue.Magenta,lightness.Normal) -> "Magenta"
+    | codel.Colour(hue.Magenta,lightness.Dark)   -> "Dark Magenta"
     | _ -> failwith("Unknown Colour")
 
 
