@@ -5,48 +5,43 @@ open Types
 
 let modulo n m = ((n % m) + m) % m
 
-
-let colourToCell (color:Color) : codel = 
+// Converts a RGB colour from an image into a codel
+let colourToCodel (color:Color) : codel = 
     match int(color.R), int(color.G), int(color.B) with
     | 0xFF, 0xC0, 0xC0 -> codel.Colour(hue.Red,lightness.Light)  
     | 0xFF, 0x00, 0x00 -> codel.Colour(hue.Red,lightness.Normal) 
     | 0xC0, 0x00, 0x00 -> codel.Colour(hue.Red,lightness.Dark)   
-
     | 0xFF, 0xFF, 0xC0 -> codel.Colour(hue.Yellow,lightness.Light) 
     | 0xFF, 0xFF, 0x00 -> codel.Colour(hue.Yellow,lightness.Normal)
     | 0xC0, 0xC0, 0x00 -> codel.Colour(hue.Yellow,lightness.Dark)  
-
     | 0xC0, 0xFF, 0xC0 -> codel.Colour(hue.Green,lightness.Light) 
     | 0x00, 0xFF, 0x00 -> codel.Colour(hue.Green,lightness.Normal)
     | 0x00, 0xC0, 0x00 -> codel.Colour(hue.Green,lightness.Dark)  
-
     | 0xC0, 0xFF, 0xFF -> codel.Colour(hue.Cyan,lightness.Light) 
     | 0x00, 0xFF, 0xFF -> codel.Colour(hue.Cyan,lightness.Normal)
     | 0x00, 0xC0, 0xC0 -> codel.Colour(hue.Cyan,lightness.Dark)  
-
     | 0xC0, 0xC0, 0xFF -> codel.Colour(hue.Blue,lightness.Light)  
     | 0x00, 0x00, 0xFF -> codel.Colour(hue.Blue,lightness.Normal) 
     | 0x00, 0x00, 0xC0 -> codel.Colour(hue.Blue,lightness.Dark)   
-
     | 0xFF, 0xC0, 0xFF -> codel.Colour(hue.Magenta,lightness.Light)  
     | 0xFF, 0x00, 0xFF -> codel.Colour(hue.Magenta,lightness.Normal) 
     | 0xC0, 0x00, 0xC0 -> codel.Colour(hue.Magenta,lightness.Dark)   
-
     | 0x00, 0x00, 0x00 -> codel.Black
-
     | _ -> codel.White
 
-let loadImage (image:Bitmap) (codelSize:int) : (int * int * program) = 
+let loadImage filename codelSize = 
+    //Load the file
+    let image = new Bitmap(filename: string)
 
+    // Calculate the codel size of our program
     let width = image.Width / codelSize
     let height = image.Height / codelSize
-    let a = Array2D.init width height (fun _ _ -> codel.White)
 
-    for x in 0..width-1 do
-        for y in 0..height-1 do
-            a.[x,y] <- image.GetPixel(x * codelSize, y * codelSize) |> colourToCell
+    // Create and populate a 2d array
+    let program = Array2D.init width height 
+                               (fun x y -> image.GetPixel(x * codelSize, y * codelSize) |> colourToCodel)
 
-    width, height, a
+    width, height, program
 
 
 

@@ -1,5 +1,4 @@
-﻿open System.Drawing
-open Types
+﻿open Types
 open Parser
 
 let rotateStack (stack:List<int>) (depth:int) =
@@ -157,8 +156,8 @@ let main argv =
     //let image = new Bitmap("C:\Code\Piet.net\piet_pi.png")
     //let width, height, program = loadImage image 1
     //
-    let image = new Bitmap("C:\Code\Piet.net\Piet_hello_Big.png")
-    let width, height, program = loadImage image 5
+    //let image = new Bitmap("C:\Code\Piet.net\Piet_hello_Big.png")
+    let width, height, program = loadImage "C:\Code\Piet.net\Piet_hello_Big.png" 5
 
     let a = runLoop program width height 0 0 dp.Right cc.Left []
     let b = System.Console.ReadLine()

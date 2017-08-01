@@ -20,18 +20,6 @@ type codel =
 
 type program  = codel[,]
 
-type direction =
-    | Right
-    | Down
-    | Left
-    | Up
-
-type dp = direction
-
-type cc =
-    | Left
-    | Right
-
 type command =
     | NOP
     | Push
@@ -51,3 +39,23 @@ type command =
     | InChar
     | OutNumber
     | OutChar
+
+type direction =
+    | Right
+    | Down
+    | Left
+    | Up
+
+type dp = direction
+
+type cc =
+    | Left
+    | Right
+
+
+
+let p3 = codel.Black
+let a = 
+    match p3 with
+    | White -> "White"
+    | Colour(h,l) -> "A Colour"
